@@ -33,6 +33,17 @@ def parse_mnist(image_filename, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR SOLUTION
+    with gzip.open(image_filename, "rb") as f1:
+      data1 = f1.read()
+    with gzip.open(label_filename, "rb") as f2:
+      data2 = f2.read()
+    magic, num_images, rows, cols = struct.unpack(">IIII", data1[:16])
+    magic2, num_labels = struct.unpack(">II", data2[:8])
+    X = np.frombuffer(data1[16:], dtype=np.uint8)
+    y = np.frombuffer(data2[8:], dtype=np.uint8)
+    X = X.reshape(num_images, rows * cols)
+    X = X.astype(np.float32) / 255.0
+    return X, y
     raise NotImplementedError()
     ### END YOUR SOLUTION
 
@@ -54,7 +65,10 @@ def softmax_loss(Z, y_one_hot):
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    correct_logits = ndl.summation(Z * y_one_hot, axes = (1,))
+    expsum = ndl.summation(ndl.exp(Z), axes=1)
+    losses = ndl.log(expsum) - correct_logits
+    return ndl.summation(losses) / Z.shape[0]
     ### END YOUR SOLUTION
 
 
@@ -83,6 +97,37 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
     """
 
     ### BEGIN YOUR SOLUTION
+    num_examples = X.shape[0]
+    num_classes = W2.shape[1]
+
+    for i in range(0, num_examples, batch):
+        # 1. mini-batch
+        X_batch = X[i:i + batch]
+        y_batch = y[i:i + batch]
+
+        # 2. numpy -> Needle Tensor
+        X_batch = ndl.Tensor(X_batch)
+
+        # 3.turn label into one-hot
+        y_one_hot = np.zeros((len(y_batch), num_classes), dtype=np.float32)
+        y_one_hot[np.arange(len(y_batch)), y_batch] = 1
+        y_one_hot = ndl.Tensor(y_one_hot)
+
+        # 4. forward
+        hidden = ndl.relu(X_batch @ W1)
+        logits = hidden @ W2
+
+        # 5. loss
+        loss = softmax_loss(logits, y_one_hot)
+
+        # 6. backward
+        loss.backward()
+
+        # 7. SGD update
+        W1 = ndl.Tensor(W1.numpy() - lr * W1.grad.numpy())
+        W2 = ndl.Tensor(W2.numpy() - lr * W2.grad.numpy())
+
+    return W1, W2
     raise NotImplementedError()
     ### END YOUR SOLUTION
 
