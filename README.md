@@ -17,8 +17,6 @@ From the repository root, run the Homework 1 tests with:
 PYTHONPATH=python python -m pytest tests/hw1 -q
 ```
 
-This README documents the repository structure and a test command; it does not claim that the tests have been run or passed. Please check the assignment instructions for any additional environment or dependency requirements.
-
 ## Scope
 
-This is coursework, not a standalone production framework. The repository includes assignment-provided structure and components; descriptions of individual implementation work should be limited to parts personally completed and verified.
+This is coursework, not a standalone production framework. 
